@@ -58,7 +58,7 @@ def do_submit_task(taskid, contestant_md5, problem_md5, priority):
 		"details": [],  # keep sorted
 		"status": "Pending",
 		"status_short": "PD",
-		"tot_time_ns": 0,
+		"max_time_ns": 0,
 		"max_mem_kb": 0,
 		"score": 0,
 	}
@@ -83,7 +83,7 @@ def do_get_task_results(taskids):
 		tmp["result"] = {
 			"status": task["status"],
 			"status_short": task["status_short"],
-			"tot_time_ns": task["tot_time_ns"],
+			"max_time_ns": task["max_time_ns"],
 			"max_mem_kb": task["max_mem_kb"],
 			"score": task["score"],
 			"details": task["details"],
