@@ -63,6 +63,17 @@ def do_send_file(req):
 	content = req.POST.get("content", "")
 	return json_response(req, db.do_send_file(md5, content))
 
+def do_submit_task(req):
+	taskid = req.POST.get("taskid", "")
+	contestant_md5 = req.POST.get("contestant_md5", "")
+	problem_md5 = req.POST.get("problem_md5", "")
+	priority = utils.parse_int(req.POST.get("priority", ""), -1)
+	return json_response(req, db.do_submit_task(taskid, contestant_md5, problem_md5, priority))
+
+def do_get_task_results(req):
+	taskids = req.POST.get("taskids", "").split("|")
+	return json_response(req, db.do_get_task_results(taskids))
+
 
 def entry(req):
 	path = req.path
