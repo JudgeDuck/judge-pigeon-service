@@ -68,10 +68,12 @@ def do_submit_task(taskid, contestant_md5, problem_md5, priority):
 		"details": [],  # keep sorted
 		"status": "Pending",
 		"status_short": "PD",
+		"has_completed": "false",
 		"max_time_ns": 0,
 		"max_mem_kb": 0,
 		"score": 0,
 		"todos": [],
+		"runnings": [],
 	}
 	all_tasks[taskid] = task
 	lock.release()
@@ -98,6 +100,7 @@ def do_get_task_results(taskids):
 			"max_mem_kb": task["max_mem_kb"],
 			"score": task["score"],
 			"details": task["details"],
+			"has_completed": task["has_completed"],
 		}
 		ret.append(tmp)
 	lock.release()
@@ -117,6 +120,21 @@ def do_get_pending_compile_task():
 		if all_files.get(task["contestant_md5"], None) == None:
 			continue
 		if all_files.get(task["problem_md5"], None) == None:
+			continue
+		if (ret == None) or compare_tasks(task, ret):
+			ret = task
+	lock.release()
+	return ret
+
+def do_get_todo_task():
+	lock.acquire()
+	global all_tasks
+	ret = None
+	for taskid in all_tasks:
+		task = all_tasks[taskid]
+		if len(task["todos"]) == 0:
+			continue
+		if task["compilation_result"] != "success":
 			continue
 		if (ret == None) or compare_tasks(task, ret):
 			ret = task

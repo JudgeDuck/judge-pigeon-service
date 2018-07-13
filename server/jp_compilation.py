@@ -57,6 +57,9 @@ def prepare_task(task):
 		"answer_file": path_p + "answer.txt",
 		"time_limit_ns": time_limit_ns,
 		"memory_limit_kb": memory_limit_kb,
+		"max_score": 100,
+		"try_cnt": 0,
+		"detail_index": 1,
 	})
 	# Compile
 	task["status"] = "Compiling"
@@ -83,11 +86,13 @@ def prepare_task(task):
 		"mem_kb": "N/A",
 		"score": "N/A",
 		"detail": compile_output,
+		"detail_index": 0,
 	})
 	task["status"] = compile_status
 	if compile_status != "Compile OK":
 		task["status_short"] = "CE"
 		task["compilation_result"] = "failed"
+		task["has_completed"] = "true"
 		return
 	task["status_short"] = "COK"
 	task["compilation_result"] = "success"

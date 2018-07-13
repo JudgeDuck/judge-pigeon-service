@@ -117,6 +117,8 @@ def get_current_time():
 
 
 def render_time_ns(tl):
+	if tl == None:
+		return "N/A"
 	tl = int(tl + 0.5)
 	res = "NaN "
 	if tl >= 1e9:
@@ -136,6 +138,8 @@ def render_time_ns(tl):
 	return res + " " + res1[1]
 
 def render_memory_kb(ml):
+	if ml == None:
+		return "N/A"
 	if ml < 1024:
 		return "%s KB" % ml
 	elif ml % 1024 == 0:
