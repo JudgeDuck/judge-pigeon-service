@@ -5,9 +5,13 @@ from . import jd_utils as utils
 path_prefix = "jp_data/"
 path_temp = path_prefix + "temp/"
 path_files = path_prefix + "files/"
+path_tasks = path_prefix + "tasks/"
+path_problems = path_prefix + "problems/"
 
 import threading
 lock = threading.Lock()
+
+import base64
 
 
 # Map md5 to ???
@@ -31,12 +35,13 @@ def do_query_file(md5):
 
 def do_send_file(md5, content):
 	ret = {"status": "failed"}
-	md5sum = utils.md5sum(content)
+	content = base64.b64decode(content.encode("utf-8"))
+	md5sum = utils.md5sum_b(content)
 	if md5 != md5sum:
 		ret["error"] = "MD5 mismatch"
 		return ret
 	lock.acquire()
-	utils.write_file(path_files + md5, content)
+	utils.write_file_b(path_files + md5, content)
 	all_files[md5] = 1
 	lock.release()
 	ret["status"] = "success"
@@ -49,11 +54,16 @@ def do_submit_task(taskid, contestant_md5, problem_md5, priority):
 		return ret
 	lock.acquire()
 	global all_tasks
+	if all_tasks.get(taskid, None) != None:
+		ret["error"] = "The task already exists"
+		lock.release()
+		return ret
 	task = {
 		"taskid": taskid,
+		"issue_time": utils.get_current_time(),
 		"contestant_md5": contestant_md5,
 		"problem_md5": problem_md5,
-		"priority": priority,
+		"priority": priority,  # int
 		"compilation_result": "N/A",  # success or failed
 		"details": [],  # keep sorted
 		"status": "Pending",
@@ -61,6 +71,7 @@ def do_submit_task(taskid, contestant_md5, problem_md5, priority):
 		"max_time_ns": 0,
 		"max_mem_kb": 0,
 		"score": 0,
+		"todos": [],
 	}
 	all_tasks[taskid] = task
 	lock.release()
@@ -92,9 +103,32 @@ def do_get_task_results(taskids):
 	lock.release()
 	return ret
 
+#
 
+def do_get_pending_compile_task():
+	lock.acquire()
+	global all_tasks
+	global all_files
+	ret = None
+	for taskid in all_tasks:
+		task = all_tasks[taskid]
+		if task["compilation_result"] != "N/A":
+			continue
+		if all_files.get(task["contestant_md5"], None) == None:
+			continue
+		if all_files.get(task["problem_md5"], None) == None:
+			continue
+		if (ret == None) or compare_tasks(task, ret):
+			ret = task
+	lock.release()
+	return ret
 
+#
 
+def compare_tasks(task1, task2):
+	if task1["priority"] != task2["priority"]:
+		return task1["priority"] > task2["priority"]
+	return task1["issue_time"] < task2["issue_time"]
 
 
 
@@ -113,8 +147,8 @@ def init_files():
 	all_files = {}
 	li = utils.list_dir(path_files)
 	for md5 in li:
-		content = utils.read_file(path_files + md5)
-		if utils.md5sum(content) != md5:
+		content = utils.read_file_b(path_files + md5)
+		if utils.md5sum_b(content) != md5:
 			utils.remove_file(path_files + md5)
 			print("[jp] Removed corrupted file '%s'" % md5)
 			pass
@@ -123,6 +157,7 @@ def init_files():
 def init_tasks():
 	global all_tasks
 	all_tasks = {}
+	utils.system("rm", ["-rf", path_tasks + "*"], 5)
 
 
 

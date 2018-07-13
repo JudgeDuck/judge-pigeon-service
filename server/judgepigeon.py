@@ -41,6 +41,9 @@ import urllib
 
 from . import jd_utils as utils
 from . import jp_database as db
+from . import jp_compilation
+
+jp_compilation.start()
 
 def json_response(req, info):
 	return HttpResponse(json.dumps(info), content_type="application/json")

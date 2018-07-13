@@ -7,8 +7,21 @@ import datetime
 import hashlib
 
 
+def string_get_line(s, line_num):
+	return "".join(s.split("\n")[line_num:line_num+1])
+
 def md5sum(s):
 	return hashlib.md5(s.encode("utf-8")).hexdigest()
+
+def md5sum_b(s):
+	return hashlib.md5(s).hexdigest()
+
+def system(name, args, timeout = 5):
+	try:
+		cp = subprocess.run([name] + args, stdout=subprocess.PIPE, timeout=timeout)
+		return str(cp.stdout, "utf-8")
+	except:
+		return ""
 
 def remove_file(s):
 	try:
@@ -24,7 +37,8 @@ def rename(name1, name2):
 
 def mkdir(name):
 	try:
-		os.mkdir(name)
+		# os.mkdir(name)
+		os.makedirs(name, exist_ok=True)
 	except:
 		pass
 
@@ -65,9 +79,27 @@ def read_file(name, fallback = ""):
 	except:
 		return fallback
 
+def read_file_b(name, fallback = b""):
+	try:
+		f = open(name, "rb")
+		res = f.read()
+		f.close()
+		return res
+	except:
+		return fallback
+
 def write_file(name, content):
 	try:
 		f = open(name, "w")
+		f.write(content)
+		f.close()
+		return True
+	except:
+		pass
+
+def write_file_b(name, content):
+	try:
+		f = open(name, "wb")
 		f.write(content)
 		f.close()
 		return True
