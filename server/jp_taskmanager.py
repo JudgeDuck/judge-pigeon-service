@@ -38,6 +38,19 @@ def update_task_result(task, result):
 		if todo["try_cnt"] < 3:
 			task["todos"].append(todo)
 			return
+	
+	uoj_stid = todo.get("uoj_subtask_id", 0)
+	if uoj_stid != 0:
+		if not "uoj_st_status" in task: task["uoj_st_status"] = {}
+		uoj_st_status = task["uoj_st_status"]
+		if not uoj_stid in uoj_st_status:
+			uoj_st_status[uoj_stid] = result["status"]
+		elif uoj_st_status[uoj_stid] == "Accepted":
+			uoj_st_status[uoj_stid] = result["status"]
+			result["score"] -= todo["max_score"]
+		else:
+			result["score"] = 0
+	
 	task["score"] += result["score"]
 	if result["time_ns"] != None:
 		task["max_time_ns"] = max(task["max_time_ns"], result["time_ns"])

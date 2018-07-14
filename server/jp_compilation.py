@@ -30,26 +30,7 @@ def unzip_contestant_files(taskid, md5):
 	utils.system("cp", [db.path_files + md5, zip_name])
 	utils.system("unzip", ["-o", zip_name, "-d", path], 20)
 
-# Parse the problem configs and compile
-def prepare_task(task):
-	taskid = task["taskid"]
-	path_p = db.path_problems + task["problem_md5"] + "/"
-	path_t = db.path_tasks + taskid + "/"
-	# TODO support more formats
-	conf_content = utils.read_file(path_p + "config.txt").split("\n")
-	time_limit_ns = 0
-	memory_limit_kb = 0
-	for s in conf_content:
-		key = s.split(" ")[0]
-		value = " ".join(s.split(" ")[1:])
-		if key == "time_limit":
-			time_limit_ns = utils.parse_int(value)
-		if key == "memory_limit":
-			memory_limit_kb = utils.parse_int(value)
-	language = utils.read_file(path_t + "language.txt").split("\n")[0]
-	contestant_filename = "contestant.cpp"
-	if language == "C":
-		contestant_filename = "contestant.c"
+def prepare_judgeduck_task(task, path_t, path_p, time_limit_ns, memory_limit_kb):
 	task["todos"].append({
 		"name": "Testcase #1",
 		"binary_file": path_t + "contestant.exe",
@@ -61,6 +42,152 @@ def prepare_task(task):
 		"try_cnt": 0,
 		"detail_index": 1,
 	})
+
+def prepare_uoj_task(task, path_t, path_p, time_limit_ns, memory_limit_kb):
+	conf_content = utils.read_file(path_p + "problem.conf").split("\n")
+	n_tests = 1
+	input_pre = ""
+	input_suf = ""
+	output_pre = ""
+	output_suf = ""
+	time_limit_each = {}
+	memory_limit_each = {}
+	n_subtasks = 0
+	subtask_end = {}
+	subtask_score = {}
+	for s in conf_content:
+		key = s.split(" ")[0]
+		value = s[len(key)+1:]
+		if key == "n_tests":
+			n_tests = utils.parse_int(value, 1)
+		if key == "time_limit":
+			time_limit_ns = utils.parse_int(value, 1) * 1000000000
+		if key == "memory_limit":
+			memory_limit_kb = utils.parse_int(value, 1) * 1024
+		if key == "input_pre":
+			input_pre = value
+		if key == "input_suf":
+			input_suf = value
+		if key == "output_pre":
+			output_pre = value
+		if key == "output_suf":
+			output_suf = value
+		if key[:len("time_limit_")] == "time_limit_":
+			case_id = utils.parse_int(key[len("time_limit_"):], -1)
+			time_limit_each[case_id] = utils.parse_int(value, 1) * 1000000000
+		if key[:len("memory_limit_")] == "memory_limit_":
+			case_id = utils.parse_int(key[len("memory_limit_"):], -1)
+			memory_limit_each[case_id] = utils.parse_int(value, 1) * 1024
+		if key == "n_subtasks":
+			n_subtasks = utils.parse_int(value, 0)
+		if key[:len("subtask_end_")] == "subtask_end_":
+			subtask_id = utils.parse_int(key[len("subtask_end_"):], -1)
+			subtask_end[subtask_id] = utils.parse_int(value, -1)
+		if key[:len("subtask_score_")] == "subtask_score_":
+			subtask_id = utils.parse_int(key[len("subtask_score_"):], -1)
+			subtask_score[subtask_id] = utils.parse_int(value, -1)
+	has_valid_subtasks = True
+	if n_subtasks == 0:
+		has_valid_subtasks = False
+	else:
+		subtask_end[0] = 0
+		tot_score = 0
+		for i in range(1, n_subtasks + 1):
+			if (not i in subtask_end) or (not i in subtask_score):
+				has_valid_subtasks = False
+				break
+			if subtask_end[i] <= subtask_end[i - 1]:
+				has_valid_subtasks = False
+				break
+			if subtask_end[i] > n_tests:
+				has_valid_subtasks = False
+				break
+			if subtask_score[i] < 0:
+				has_valid_subtasks = False
+				break
+			tot_score += subtask_score[i]
+		if tot_score != 100:
+			has_valid_subtasks = False
+	if has_valid_subtasks:
+		for stid in range(1, n_subtasks + 1):
+			left = subtask_end[stid - 1] + 1
+			right = subtask_end[stid]
+			for i in range(left, right + 1):
+				tlns = time_limit_each[i] if i in time_limit_each else time_limit_ns
+				mlkb = memory_limit_each[i] if i in memory_limit_each else memory_limit_kb
+				task["todos"].append({
+					"name": "Subtask #%s Testcase #%s" % (stid, i),
+					"binary_file": path_t + "contestant.exe",
+					"input_file": path_p + "%s%s.%s" % (input_pre, i, input_suf),
+					"answer_file": path_p + "%s%s.%s" % (output_pre, i, output_suf),
+					"time_limit_ns": tlns,
+					"memory_limit_kb": mlkb,
+					"max_score": subtask_score[stid],
+					"try_cnt": 0,
+					"detail_index": i,
+					"uoj_subtask_id": stid,
+				})
+	else:
+		test_scores = {}
+		for i in range(1, n_tests + 1): test_scores[i] = 0
+		cur = 0
+		for i in range(100):
+			cur += 1
+			if cur > n_tests: cur = 1
+			test_scores[cur] += 1
+		for i in range(1, n_tests + 1):
+			tlns = time_limit_each[i] if i in time_limit_each else time_limit_ns
+			mlkb = memory_limit_each[i] if i in memory_limit_each else memory_limit_kb
+			task["todos"].append({
+				"name": "Testcase #%s" % i,
+				"binary_file": path_t + "contestant.exe",
+				"input_file": path_p + "%s%s.%s" % (input_pre, i, input_suf),
+				"answer_file": path_p + "%s%s.%s" % (output_pre, i, output_suf),
+				"time_limit_ns": tlns,
+				"memory_limit_kb": mlkb,
+				"max_score": test_scores[i],
+				"try_cnt": 0,
+				"detail_index": i,
+				"uoj_subtask_id": 0,
+			})
+
+# Parse the problem configs and compile
+def prepare_task(task):
+	taskid = task["taskid"]
+	path_p = db.path_problems + task["problem_md5"] + "/"
+	path_t = db.path_tasks + taskid + "/"
+	
+	conf_content = utils.read_file(path_p + "config.txt").split("\n")
+	time_limit_ns = 0
+	memory_limit_kb = 0
+	data_type = ""
+	
+	for s in conf_content:
+		key = s.split(" ")[0]
+		value = " ".join(s.split(" ")[1:])
+		if key == "time_limit":
+			time_limit_ns = utils.parse_int(value)
+		if key == "memory_limit":
+			memory_limit_kb = utils.parse_int(value)
+		if key == "data_type":
+			data_type = value
+	
+	language = utils.read_file(path_t + "language.txt").split("\n")[0]
+	contestant_filename = "contestant.cpp"
+	if language == "C":
+		contestant_filename = "contestant.c"
+	
+	if data_type == "":
+		prepare_judgeduck_task(task, path_t, path_p, time_limit_ns, memory_limit_kb)
+	elif data_type == "UOJ":
+		prepare_uoj_task(task, path_t, path_p, time_limit_ns, memory_limit_kb)
+	else:
+		task["status"] = "Judge Failed"
+		task["status_short"] = ""
+		task["compilation_result"] = "failed"
+		task["has_completed"] = "true"
+		return
+	
 	# Compile
 	task["status"] = "Compiling"
 	task["status_short"] = "COMP"

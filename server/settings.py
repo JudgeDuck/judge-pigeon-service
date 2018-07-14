@@ -27,6 +27,9 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
+# Pigeons only !!!
+DATA_UPLOAD_MAX_MEMORY_SIZE = 262144 * 1024  # 256MB
+
 
 # Application definition
 
