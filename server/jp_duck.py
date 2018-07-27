@@ -30,7 +30,7 @@ def jp_duck_thread_func(self):
 				"%s" % self.args["time_ns"],
 				"%s" % self.args["mem_kb"],
 			],
-			30,
+			140,
 		)
 		arr = run_output.split("\n")
 		has_correct_answer = False

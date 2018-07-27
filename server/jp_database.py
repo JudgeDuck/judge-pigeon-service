@@ -119,8 +119,8 @@ def do_get_pending_compile_task():
 			continue
 		if all_files.get(task["contestant_md5"], None) == None:
 			continue
-		if all_files.get(task["problem_md5"], None) == None:
-			continue
+		#if all_files.get(task["problem_md5"], None) == None:
+		#	continue
 		if (ret == None) or compare_tasks(task, ret):
 			ret = task
 	lock.release()
@@ -175,7 +175,7 @@ def init_files():
 def init_tasks():
 	global all_tasks
 	all_tasks = {}
-	utils.system("rm", ["-rf", path_tasks + "*"], 5)
+	utils.system("rm", ["-rf", path_tasks + "*"], 100)
 
 
 

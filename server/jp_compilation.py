@@ -20,15 +20,15 @@ def unzip_problem(md5):
 		return
 	utils.mkdir(path)
 	zip_name = path + "_problem.zip"
-	utils.system("cp", [db.path_files + md5, zip_name])
-	utils.system("unzip", ["-o", zip_name, "-d", path], 20)
+	utils.system("cp", [db.path_files + md5, zip_name], 100)
+	utils.system("unzip", ["-o", zip_name, "-d", path], 600)
 
 def unzip_contestant_files(taskid, md5):
 	path = db.path_tasks + taskid + "/"
 	utils.mkdir(path)
 	zip_name = path + "_contestant.zip"
-	utils.system("cp", [db.path_files + md5, zip_name])
-	utils.system("unzip", ["-o", zip_name, "-d", path], 20)
+	utils.system("cp", [db.path_files + md5, zip_name], 100)
+	utils.system("unzip", ["-o", zip_name, "-d", path], 100)
 
 def prepare_judgeduck_task(task, path_t, path_p, time_limit_ns, memory_limit_kb):
 	task["todos"].append({
@@ -226,7 +226,7 @@ def prepare_task(task):
 
 
 def jp_compile(task):
-	unzip_problem(task["problem_md5"])
+	#unzip_problem(task["problem_md5"])
 	unzip_contestant_files(task["taskid"], task["contestant_md5"])
 	prepare_task(task)
 
