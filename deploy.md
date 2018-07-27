@@ -25,8 +25,10 @@ $ sudo apt install zip
 ### Django migration
 
 ```bash
-$ python3 manage.py runserver
+$ python3 manage.py migrate
 ```
+
+(**Please Ctrl-C the migration process when it stucks, since the judge thread started with the server would cause an infinity loop in background**)
 
 ### Configure ducks
 
