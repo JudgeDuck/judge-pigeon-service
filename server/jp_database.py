@@ -153,6 +153,9 @@ def do_get_todo_task_with_duck_id(id, n_ducks):
 			continue
 		ok = False
 		for todo in task["todos"]:
+			if todo["preferred_duck_id"] == -1:
+				ok = True
+				break
 			if todo["preferred_duck_id"] % n_ducks == id:
 				ok = True
 				break

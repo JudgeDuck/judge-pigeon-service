@@ -41,7 +41,7 @@ def prepare_judgeduck_task(task, path_t, path_p, time_limit_ns, memory_limit_kb)
 		"max_score": 100,
 		"try_cnt": 0,
 		"detail_index": 1,
-		"preferred_duck_id": 0,
+		"preferred_duck_id": -1,
 	})
 
 def prepare_uoj_task(task, path_t, path_p, time_limit_ns, memory_limit_kb):
