@@ -141,6 +141,28 @@ def do_get_todo_task():
 	lock.release()
 	return ret
 
+def do_get_todo_task_with_duck_id(id, n_ducks):
+	lock.acquire()
+	global all_tasks
+	ret = None
+	for taskid in all_tasks:
+		task = all_tasks[taskid]
+		if len(task["todos"]) == 0:
+			continue
+		if task["compilation_result"] != "success":
+			continue
+		ok = False
+		for todo in task["todos"]:
+			if todo["preferred_duck_id"] % n_ducks == id:
+				ok = True
+				break
+		if not ok:
+			continue
+		if (ret == None) or compare_tasks(task, ret):
+			ret = task
+	lock.release()
+	return ret
+
 #
 
 def compare_tasks(task1, task2):

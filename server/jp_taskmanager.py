@@ -84,40 +84,67 @@ def jp_taskmanager_thread_func():
 	while True:
 		time.sleep(0.2)
 		while True:
+			n_ducks = len(ducks)
 			for duck in ducks:
 				if duck.has_result:
 					update_task_result(duck.task, duck.result)
 					duck.has_result = False
-			free_duck = None
-			for duck in ducks:
-				if not duck.has_task:
-					free_duck = duck
-					break
-			if free_duck == None:
-				break
-			task = db.do_get_todo_task()
-			if task == None:
-				break
-			todo = task["todos"][0]
-			task["todos"] = task["todos"][1:]
-			task["runnings"].append(todo)
-			task["status"] = "Running %s of %s" % (
-				len(task["details"]) - 1,
-				len(task["details"]) + len(task["todos"]) + len(task["runnings"]) - 1
-			)
-			task["status_short"] = "RUN"
-			print("Start task %s : %s on %s" % (task["taskid"], todo["name"], free_duck.name))
-			free_duck.task = task
-			free_duck.args = {
-				"name": todo["name"],
-				"input_file": todo["input_file"],
-				"answer_file": todo["answer_file"],
-				"binary_file": todo["binary_file"],
-				"time_ns": todo["time_limit_ns"],
-				"mem_kb": todo["memory_limit_kb"],
-				"max_score": todo["max_score"],
-			}
-			free_duck.has_task = True
+			for duck_id in range(len(ducks)):
+				duck = ducks[duck_id]
+				if duck.has_task: continue
+				task = db.do_get_todo_task_with_duck_id(duck_id, n_ducks)
+				if task == None: continue
+				todo_id = 0
+				for todo_id in range(len(task["todos"])):
+					todo = task["todos"][todo_id]
+					if todo["preferred_duck_id"] % n_ducks == id:
+						break
+				todo = task["todos"][todo_id]
+				task["todos"] = task["todos"][:todo_id] + task["todos"][todo_id+1:]
+				task["runnings"].append(todo)
+				task["status"] = "Running %s of %s" % (
+					len(task["details"]) - 1,
+					len(task["details"]) + len(task["todos"]) + len(task["runnings"]) - 1
+				)
+				task["status_short"] = "RUN"
+				print("Start task %s : %s on %s" % (task["taskid"], todo["name"], duck.name))
+				duck.task = task
+				duck.args = {
+					"name": todo["name"],
+					"input_file": todo["input_file"],
+					"answer_file": todo["answer_file"],
+					"binary_file": todo["binary_file"],
+					"time_ns": todo["time_limit_ns"],
+					"mem_kb": todo["memory_limit_kb"],
+					"max_score": todo["max_score"],
+				}
+				duck.has_task = True
+			for duck_id in range(len(ducks)):
+				duck = ducks[duck_id]
+				if duck.has_task: continue
+				task = db.do_get_todo_task()
+				if task == None: continue
+				todo_id = 0
+				todo = task["todos"][0]
+				task["todos"] = task["todos"][:todo_id] + task["todos"][todo_id+1:]
+				task["runnings"].append(todo)
+				task["status"] = "Running %s of %s" % (
+					len(task["details"]) - 1,
+					len(task["details"]) + len(task["todos"]) + len(task["runnings"]) - 1
+				)
+				task["status_short"] = "RUN"
+				print("Start task %s : %s on %s" % (task["taskid"], todo["name"], duck.name))
+				duck.task = task
+				duck.args = {
+					"name": todo["name"],
+					"input_file": todo["input_file"],
+					"answer_file": todo["answer_file"],
+					"binary_file": todo["binary_file"],
+					"time_ns": todo["time_limit_ns"],
+					"mem_kb": todo["memory_limit_kb"],
+					"max_score": todo["max_score"],
+				}
+				duck.has_task = True
 
 
 

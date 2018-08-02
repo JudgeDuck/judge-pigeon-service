@@ -41,6 +41,7 @@ def prepare_judgeduck_task(task, path_t, path_p, time_limit_ns, memory_limit_kb)
 		"max_score": 100,
 		"try_cnt": 0,
 		"detail_index": 1,
+		"preferred_duck_id": 0,
 	})
 
 def prepare_uoj_task(task, path_t, path_p, time_limit_ns, memory_limit_kb):
@@ -126,6 +127,7 @@ def prepare_uoj_task(task, path_t, path_p, time_limit_ns, memory_limit_kb):
 					"try_cnt": 0,
 					"detail_index": i,
 					"uoj_subtask_id": stid,
+					"preferred_duck_id": i,
 				})
 	else:
 		test_scores = {}
@@ -149,6 +151,7 @@ def prepare_uoj_task(task, path_t, path_p, time_limit_ns, memory_limit_kb):
 				"try_cnt": 0,
 				"detail_index": i,
 				"uoj_subtask_id": 0,
+				"preferred_duck_id": 0,
 			})
 
 # Parse the problem configs and compile
