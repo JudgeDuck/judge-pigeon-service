@@ -151,7 +151,7 @@ def prepare_uoj_task(task, path_t, path_p, time_limit_ns, memory_limit_kb):
 				"try_cnt": 0,
 				"detail_index": i,
 				"uoj_subtask_id": 0,
-				"preferred_duck_id": 0,
+				"preferred_duck_id": i,
 			})
 
 # Parse the problem configs and compile
